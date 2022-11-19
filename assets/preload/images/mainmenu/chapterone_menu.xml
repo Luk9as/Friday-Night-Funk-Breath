@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8'?>
+<TextureAtlas imagePath="chapterone_menu.png">
+	<SubTexture name="idle0000" x="0" y="0" width="263" height="133" frameX="0" frameY="0" frameWidth="263" frameHeight="133" />
+	<SubTexture name="selected0000" x="0" y="133" width="263" height="133" frameX="0" frameY="0" frameWidth="263" frameHeight="133" />
+</TextureAtlas>
