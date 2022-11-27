@@ -69,10 +69,7 @@ class MainMenuState extends MusicBeatState
 		
 		Highscore.load();
 
-		if(FlxG.sound.music == null) {
-			FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
-			FlxG.sound.music.fadeIn(4, 0, 0.7);
-		}
+		
 		
 		var spr:FlxSprite = new FlxSprite().loadGraphic(Paths.image('mouse', 'shared'));
 		
@@ -143,6 +140,8 @@ class MainMenuState extends MusicBeatState
 			menuItem.updateHitbox();
 		}
 
+		Conductor.changeBPM(100);
+		
 		intro();
 		
 		//FlxG.camera.follow(camFollowPos, null, 1);
@@ -189,18 +188,47 @@ class MainMenuState extends MusicBeatState
 		logo.screenCenter();
 		add(logo);
 		
-		new FlxTimer().start(1.5, function(tmr:FlxTimer)
+		
+		
+		if (FlxG.sound.music == null)
 		{
-			FlxTween.tween(logo, {y: 0}, 0.5, { ease: FlxEase.cubeOut,
-				onComplete: function(twn:FlxTween)
+			new FlxTimer().start(0.5, function(tmr:FlxTimer)
+			{
+				FlxG.sound.play(Paths.sound('intro'));
+				
+				new FlxTimer().start(2, function(tmr:FlxTimer)
 				{
-					menuItems.forEach(function(spr:FlxSprite)
-					{
-						FlxTween.tween(spr, {y: spr.y - 720}, 1, { ease: FlxEase.cubeOut});
+					FlxG.sound.playMusic(Paths.music('menu'), 0);
+					FlxG.sound.music.fadeIn(1, 0, 7);
+					
+					FlxTween.tween(logo, {y: 0}, 0.5, { ease: FlxEase.cubeOut,
+						onComplete: function(twn:FlxTween)
+						{
+							menuItems.forEach(function(spr:FlxSprite)
+							{
+								FlxTween.tween(spr, {y: spr.y - 720}, 1, { ease: FlxEase.cubeOut});
+							});
+						}
 					});
-				}
+				});
 			});
-		});
+			
+		}
+		else
+		{
+			new FlxTimer().start(0.75, function(tmr:FlxTimer)
+			{
+				FlxTween.tween(logo, {y: 0}, 0.5, { ease: FlxEase.cubeOut,
+					onComplete: function(twn:FlxTween)
+					{
+						menuItems.forEach(function(spr:FlxSprite)
+						{
+							FlxTween.tween(spr, {y: spr.y - 720}, 1, { ease: FlxEase.cubeOut});
+						});
+					}
+				});
+			});
+		}
 	}
 
 	#if ACHIEVEMENTS_ALLOWED
@@ -216,9 +244,12 @@ class MainMenuState extends MusicBeatState
 
 	override function update(elapsed:Float)
 	{
-		if (FlxG.sound.music.volume < 0.8)
+		if (FlxG.sound.music != null)
 		{
-			FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
+			if (FlxG.sound.music.volume < 0.8)
+			{
+				FlxG.sound.music.volume += 0.5 * FlxG.elapsed;
+			}
 		}
 
 		var lerpVal:Float = CoolUtil.boundTo(elapsed * 7.5, 0, 1);
@@ -230,10 +261,11 @@ class MainMenuState extends MusicBeatState
 			{
 				changeItem(spr.ID);
 			
-				if (FlxG.mouse.justPressed)
+				if (FlxG.mouse.justPressed && spr.ID != 2)
 				{
 					selectedSomethin = true;
-					FlxG.sound.play(Paths.sound('confirmMenu'));
+					FlxG.sound.play(Paths.sound('confirmMenu'), 0.7);
+					
 					if (curSelected != spr.ID)
 					{
 						FlxTween.tween(spr, {alpha: 0}, 0.4, {
@@ -253,10 +285,10 @@ class MainMenuState extends MusicBeatState
 							switch (daSelection)
 							{
 								case 'chapterone':
+									FlxTransitionableState.skipNextTransIn = true;
+									FlxTransitionableState.skipNextTransOut = true;
 									MusicBeatState.switchState(new StoryMenuState());
 								case 'extras':
-									MusicBeatState.switchState(new AchievementsMenuState());
-								case 'chaptertwo':
 									MusicBeatState.switchState(new FreeplayState());
 								case 'options':
 									LoadingState.loadAndSwitchState(new options.OptionsState());
@@ -264,19 +296,16 @@ class MainMenuState extends MusicBeatState
 						});
 					}
 				}
+				else if (FlxG.mouse.justPressed)
+				{
+					FlxG.sound.play(Paths.sound('cancelMenu'), 0.7);
+				}
 			}
 		});
 
-		if (controls.BACK)
-		{
-			selectedSomethin = true;
-			FlxG.sound.play(Paths.sound('cancelMenu'));
-			MusicBeatState.switchState(new TitleState());
-		}
-
 		
 		#if desktop
-		else if (FlxG.keys.anyJustPressed(debugKeys))
+		if (FlxG.keys.anyJustPressed(debugKeys) && !selectedSomethin)
 		{
 			selectedSomethin = true;
 			MusicBeatState.switchState(new MasterEditorMenu());
